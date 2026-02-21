@@ -1,0 +1,4 @@
+isort
+opencv-python-headless
+pylint
+pytest
