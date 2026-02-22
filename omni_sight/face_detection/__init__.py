@@ -1,0 +1,1 @@
+from omni_sight.third_party.scrfd.scrfd_face_detector import SCRFDFaceDetector

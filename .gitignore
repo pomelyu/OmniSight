@@ -54,7 +54,8 @@ nohup.out
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[]
+Icon[
+]
 
 # Thumbnails
 ._*
@@ -299,3 +300,9 @@ __marimo__/
 ##### Project Specific #####
 ############################
 # Add your project-specific rules below this line
+checkpoints
+checkpoints/
+outputs
+outputs/
+reference/
+reference

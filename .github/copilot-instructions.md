@@ -1,4 +1,5 @@
 ---
+description: 'General guidelines'
 applyTo: "**"
 ---
 
@@ -9,6 +10,7 @@ applyTo: "**"
 - Follow existing project naming and module structure patterns.
 - Prefer explicit, readable APIs so model backends can be swapped with minimal code changes.
 - Use English for all code comments.
+- When writing Python code, always follow the guidance in `instructions/python.instructions.md`.
 
 ## Technology Stack and Libraries
 - This project collects open-source ML models and exposes a unified interface.
@@ -21,7 +23,7 @@ applyTo: "**"
 - For Python imports, use relative imports when the target module is in the same directory or a subdirectory; use absolute imports in other cases.
 - Keep each file's dependencies on other repository files to a minimum.
 - Consult relevant tools in `.agents/skills` before implementation.
-- For new model integrations, check and follow `instructions/porting-instruction.md` first.
+- For new model integrations, check and follow `instructions/porting.instruction.md` first.
 
 ## Security and Error Handling
 - Validate external inputs and model/config parameters.
