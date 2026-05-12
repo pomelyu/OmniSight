@@ -44,7 +44,7 @@ for i, det in enumerate(detections):
 # SCRFD face detection
 # Download models from https://github.com/cysin/scrfd_onnx
 python -m demo.demo_scrfd \
-    --model checkpoints/scrfd_10g_bnkps_shape512x512-237daff4.onnx \
+    --model scrfd_10g_bnkps \
     --image tests/resources/one_girl.jpg \
     --output outputs/result.jpg
 

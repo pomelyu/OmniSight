@@ -33,3 +33,11 @@ Utilities
 .. automodule:: omni_sight.utils.algo
    :members:
    :show-inheritance:
+
+.. automodule:: omni_sight.utils.file_loader
+   :members:
+   :show-inheritance:
+
+.. automodule:: omni_sight.utils.onnx_loader
+   :members:
+   :show-inheritance:

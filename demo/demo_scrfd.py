@@ -42,8 +42,9 @@ def _draw_detections(
 def main() -> None:
     """Run SCRFD detection from command line."""
     parser = argparse.ArgumentParser(description="Run SCRFD face detection on a single image.")
-    parser.add_argument("--model", "-m", required=True, help="Path to SCRFD ONNX model file.")
     parser.add_argument("--image", "-i", required=True, help="Path to input image.")
+    parser.add_argument("--model", "-m", default="scrfd_10g_bnkps", choices=["scrfd_2.5g_bnkps", "scrfd_10g_bnkps"])
+    parser.add_argument("--ckpt", default="", help="Path to SCRFD ONNX model file.")
     parser.add_argument("--output", "-o", default="outputs/scrfd_demo.jpg", help="Path for output image with detections.")
     parser.add_argument("--device", default="cpu", help="Inference device, e.g. cpu or cuda:0.")
     parser.add_argument("--thresh", type=float, default=0.5, help="Detection confidence threshold in [0, 1].")
@@ -52,12 +53,9 @@ def main() -> None:
     parser.add_argument("--metric", choices=["center", "max"], default="center", help="Selection metric when max-num > 0.")
     args = parser.parse_args()
 
-    model_path = Path(args.model).resolve()
     image_path = Path(args.image).resolve()
     output_path = Path(args.output).resolve()
 
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found: {model_path}")
     if not image_path.exists():
         raise FileNotFoundError(f"Image file not found: {image_path}")
 
@@ -67,7 +65,8 @@ def main() -> None:
 
     detector = SCRFDFaceDetector(
         device=args.device,
-        model_path=str(model_path),
+        model_name=args.model,
+        model_path=str(Path(args.ckpt).resolve()) if args.ckpt else "",
     )
 
     detections, keypoints = detector.run(

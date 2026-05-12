@@ -13,7 +13,19 @@ import onnxruntime as ort
 
 from omni_sight.basic_processor import BasicProcessor
 from omni_sight.utils.algo import nms
+from omni_sight.utils.onnx_loader import OnnxLoader
 
+scrfd_model_loader = OnnxLoader()
+scrfd_model_loader.set_file(
+    file_name="scrfd_10g_bnkps-731cbbfd.onnx",
+    urls=["https://media.githubusercontent.com/media/cysin/scrfd_onnx/refs/heads/main/scrfd_10g_bnkps.onnx"],
+    identifier="scrfd_10g_bnkps",
+)
+scrfd_model_loader.set_file(
+    file_name="scrfd_2.5g_bnkps-9c162a81.onnx",
+    urls=["https://media.githubusercontent.com/media/cysin/scrfd_onnx/refs/heads/main/scrfd_2.5g_bnkps.onnx"],
+    identifier="scrfd_2.5g_bnkps",
+)
 
 class SCRFDFaceDetector(BasicProcessor):
     """SCRFD ONNX face detector with OmniSight processor contract."""
@@ -21,7 +33,7 @@ class SCRFDFaceDetector(BasicProcessor):
     def __init__(
         self,
         device: str,
-        model_name: Optional[str] = None,
+        model_name: Optional[str] = "scrfd_10g_bnkps",
         model_path: Optional[str] = None,
     ) -> None:
         """Initialize detector and ONNX Runtime session.
@@ -38,22 +50,17 @@ class SCRFDFaceDetector(BasicProcessor):
             FileNotFoundError: If the resolved model file does not exist.
         """
         super().__init__(device=device, model_name=model_name, model_path=model_path)
-        self.model_file = model_path or model_name
-        if self.model_file is None:
+        if model_path is None and model_name is None:
             raise ValueError("Either model_path or model_name must be provided.")
-        if not os.path.exists(self.model_file):
-            raise FileNotFoundError(
-                f"SCRFD model file does not exist: {self.model_file}"
-            )
 
         self.center_cache: Dict[Tuple[int, int, int], np.ndarray] = {}
         self.batched = False
         self.taskname = "detection"
 
-        providers = self._build_providers(device)
-        self.session = ort.InferenceSession(
-            self.model_file,
-            providers=providers,
+        self.session = scrfd_model_loader.get_onnx_session(
+            identifier=model_name,
+            model_path=model_path,
+            device=device,
         )
         self._init_vars()
 
