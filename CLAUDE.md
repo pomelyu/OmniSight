@@ -18,6 +18,7 @@ skills/              # AI agent skill definitions, one per tool category
 demo/                # runnable CLI examples (will eventually merge into skills)
 checkpoints/         # model weight files (not committed)
 outputs/             # result output directory (not committed)
+docs/                # Splinx document
 ```
 
 ## Core Abstraction
@@ -42,6 +43,8 @@ Every new model wrapper **must** subclass `BasicProcessor` and implement all fou
 3. Expose the wrapper through the appropriate `TOOL_CATEGORY` directory (e.g. `omni_sight/face_detection/`)
 4. Add a runnable demo under `demo/`
 5. Write tests under `tests/` — use `tests/resources/` for fixture files
+6. Modify files under `docs` if a new tool category, a third_party wrapper or runtime dependencies are added.
+7. Add a row for each new model that is ready for use to `README.md`
 
 ## Dependencies
 
@@ -79,3 +82,40 @@ Test fixtures (sample images, etc.) live in `tests/resources/`.
 ## Skills
 
 Each tool category should have a corresponding skill under `skills/` that describes how an AI agent invokes it. The `demo/` scripts serve as interim references until skills are fully defined.
+
+## Documentation
+
+Docstring changes never require editing the docs files. Update the following only when the public module surface changes.
+
+### `docs/api.rst`
+
+Add a section for each new tool category:
+
+```rst
+Landmark Detection
+------------------
+
+.. automodule:: omni_sight.landmark_detection
+   :members:
+   :show-inheritance:
+```
+
+Add an `automodule` entry for each new third-party wrapper module:
+
+```rst
+.. automodule:: omni_sight.third_party.mediapipe.mediapipe_face_mesh
+   :members:
+   :show-inheritance:
+```
+
+### `docs/conf.py`
+
+Add new runtime dependencies to `autodoc_mock_imports`:
+
+```python
+autodoc_mock_imports = ["cv2", "numpy", "onnxruntime", "torch"]
+```
+
+### `README.md`
+
+Add a row to the "Available Models" table for each new model.
