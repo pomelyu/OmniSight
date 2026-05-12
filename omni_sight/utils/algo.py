@@ -4,9 +4,16 @@ import numpy as np
 
 
 def nms(dets: np.ndarray, thresh: float) -> List[int]:
-    """Apply greedy NMS and return kept indices.
+    """Apply greedy non-maximum suppression and return kept indices.
 
-    This function is kept reusable at module scope.
+    Args:
+        dets: Detection array of shape ``(N, 5)`` where each row is
+            ``[x1, y1, x2, y2, score]``.
+        thresh: IoU threshold above which a lower-scoring box is suppressed.
+
+    Returns:
+        List of indices into ``dets`` for boxes that survive NMS,
+        ordered by descending score.
     """
     if dets.size == 0:
         return []

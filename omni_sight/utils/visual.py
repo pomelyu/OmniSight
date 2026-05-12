@@ -16,10 +16,23 @@ def draw_bbox(
 ) -> np.ndarray:
     """Draw a bounding box on an image and return the image.
 
-    Supported bbox formats are:
-    - [x1, y1, x2, y2]
-    - [x1, y1, x2, y2, score]
-    - [[x1, y1], [x2, y2]]
+    Args:
+        image: BGR image array of shape ``(H, W, 3)``; modified in place.
+        bbox: Bounding box in one of three formats:
+
+            - ``[x1, y1, x2, y2]``
+            - ``[x1, y1, x2, y2, score]``
+            - ``[[x1, y1], [x2, y2]]``
+        color: BGR colour tuple for the rectangle and score label.
+        size: Thickness of the rectangle border in pixels.
+        confidence: Score to display as a label. If ``None``, falls back to
+            the score embedded in ``bbox`` (when present).
+
+    Returns:
+        The input ``image`` with the bounding box drawn on it.
+
+    Raises:
+        ValueError: If ``bbox`` is not one of the supported formats.
     """
     bbox_array = np.asarray(bbox)
 
@@ -66,7 +79,20 @@ def draw_keypoints(
     color: Tuple[int, int, int],
     size: int,
 ) -> np.ndarray:
-    """Draw keypoints of shape (N, 2) on an image and return the image."""
+    """Draw keypoints on an image and return the image.
+
+    Args:
+        image: BGR image array of shape ``(H, W, 3)``; modified in place.
+        kps: Keypoint array of shape ``(N, 2)`` with ``(x, y)`` coordinates.
+        color: BGR colour tuple for the keypoint circles.
+        size: Radius of each keypoint circle in pixels.
+
+    Returns:
+        The input ``image`` with the keypoints drawn on it.
+
+    Raises:
+        ValueError: If ``kps`` does not have shape ``(N, 2)``.
+    """
     keypoints_array = np.asarray(kps)
     if keypoints_array.ndim != 2 or keypoints_array.shape[1] != 2:
         raise ValueError("kps must have shape (N, 2).")

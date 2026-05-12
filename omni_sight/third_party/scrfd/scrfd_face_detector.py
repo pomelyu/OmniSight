@@ -24,7 +24,19 @@ class SCRFDFaceDetector(BasicProcessor):
         model_name: Optional[str] = None,
         model_path: Optional[str] = None,
     ) -> None:
-        """Initialize detector and ONNX Runtime session."""
+        """Initialize detector and ONNX Runtime session.
+
+        Args:
+            device: Target inference device (e.g. ``"cpu"`` or ``"cuda"``).
+            model_name: Model identifier used as the file path when
+                ``model_path`` is ``None``.
+            model_path: Explicit path to the ONNX model file; takes
+                precedence over ``model_name``.
+
+        Raises:
+            ValueError: If both ``model_name`` and ``model_path`` are ``None``.
+            FileNotFoundError: If the resolved model file does not exist.
+        """
         super().__init__(device=device, model_name=model_name, model_path=model_path)
         self.model_file = model_path or model_name
         if self.model_file is None:
@@ -47,7 +59,14 @@ class SCRFDFaceDetector(BasicProcessor):
 
     @staticmethod
     def _build_providers(device: str) -> List[str]:
-        """Select ONNX Runtime providers from device string."""
+        """Select ONNX Runtime providers from device string.
+
+        Args:
+            device: Device string (e.g. ``"cpu"`` or ``"cuda"``).
+
+        Returns:
+            List of ONNX Runtime provider strings ordered by preference.
+        """
         normalized = (device or "cpu").lower()
         available = ort.get_available_providers()
 
@@ -95,7 +114,19 @@ class SCRFDFaceDetector(BasicProcessor):
             )
 
     def _resolve_input_size(self, input_shape: List[object]) -> Tuple[int, int]:
-        """Resolve model input size from graph metadata or checkpoint name."""
+        """Resolve model input size from graph metadata or checkpoint name.
+
+        Args:
+            input_shape: Shape list from the ONNX graph input metadata
+                (may contain symbolic strings for dynamic dimensions).
+
+        Returns:
+            ``(width, height)`` tuple for the model's fixed input size.
+
+        Raises:
+            ValueError: If the size cannot be determined from metadata or
+                the model filename.
+        """
         if not isinstance(input_shape[2], str) and not isinstance(input_shape[3], str):
             return int(input_shape[3]), int(input_shape[2])
 
@@ -113,7 +144,13 @@ class SCRFDFaceDetector(BasicProcessor):
     def _parse_input_size_from_filename(filename: str) -> Optional[Tuple[int, int]]:
         """Parse input size from checkpoint filename.
 
-        Example: scrfd_10g_bnkps_shape512x512-237daff4.onnx -> (512, 512)
+        Args:
+            filename: Checkpoint basename to parse (e.g.
+                ``scrfd_10g_bnkps_shape512x512-237daff4.onnx``).
+
+        Returns:
+            ``(width, height)`` tuple if a ``WxH`` pattern is found,
+            otherwise ``None``.
         """
         for pattern in (r"shape(\d+)x(\d+)", r"(\d+)x(\d+)"):
             match = re.search(pattern, filename, flags=re.IGNORECASE)
@@ -131,7 +168,21 @@ class SCRFDFaceDetector(BasicProcessor):
         self,
         img: np.ndarray,
     ) -> Dict[str, np.ndarray]:
-        """Prepare image and metadata for SCRFD ONNX inference."""
+        """Prepare image and metadata for SCRFD ONNX inference.
+
+        Args:
+            img: BGR input image of shape ``(H, W, 3)``.
+
+        Returns:
+            Dict with keys:
+
+            - ``"blob"``: normalised NCHW float32 tensor ready for inference.
+            - ``"det_scale"``: float32 array of shape ``(1,)`` with the
+              resize scale factor.
+
+        Raises:
+            ValueError: If ``img`` does not have shape ``(H, W, 3)``.
+        """
         if img.ndim != 3 or img.shape[2] != 3:
             raise ValueError("img must have shape (H, W, 3).")
         target_size = self.input_size
@@ -164,7 +215,18 @@ class SCRFDFaceDetector(BasicProcessor):
         }
 
     def model_infer(self, preprocessed: Dict[str, np.ndarray]) -> Dict[str, object]:
-        """Run ONNX model inference with preprocessed input."""
+        """Run ONNX model inference with preprocessed input.
+
+        Args:
+            preprocessed: Output dict from :meth:`preprocess`.
+
+        Returns:
+            Dict with keys:
+
+            - ``"blob"``: the input blob forwarded from ``preprocessed``.
+            - ``"det_scale"``: float resize scale factor.
+            - ``"net_outs"``: list of raw ONNX output arrays.
+        """
         blob = preprocessed["blob"]
         net_outs = self.session.run(self.output_names, {self.input_name: blob})
         return {
@@ -181,7 +243,33 @@ class SCRFDFaceDetector(BasicProcessor):
         max_num: int = 0,
         metric: str = "center",
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
-        """Decode model outputs to detections and optional keypoints."""
+        """Decode model outputs to detections and optional keypoints.
+
+        Args:
+            inference_outputs: Output dict from :meth:`model_infer`.
+            thresh: Confidence threshold for keeping a detection. Defaults
+                to ``0.5``.
+            nms_thresh: IoU threshold for NMS. Defaults to ``0.4``.
+            max_num: Maximum number of detections to return. ``0`` means no
+                limit. Defaults to ``0``.
+            metric: Strategy for selecting top detections when
+                ``max_num > 0``. ``"max"`` keeps the largest boxes;
+                ``"center"`` prefers boxes closest to the image centre.
+                Defaults to ``"center"``.
+
+        Returns:
+            Tuple of:
+
+            - ``det``: float32 array of shape ``(K, 5)`` with columns
+              ``[x1, y1, x2, y2, score]``.
+            - ``kpss``: float32 array of shape ``(K, 5, 2)`` with keypoints,
+              or ``None`` if the model does not predict keypoints.
+
+        Raises:
+            ValueError: If ``thresh`` is outside ``[0, 1]``, ``nms_thresh``
+                is outside ``(0, 1]``, or ``metric`` is not ``"center"`` or
+                ``"max"``.
+        """
         if not 0.0 <= thresh <= 1.0:
             raise ValueError("thresh must be in [0, 1].")
         if not 0.0 < nms_thresh <= 1.0:
@@ -288,7 +376,20 @@ class SCRFDFaceDetector(BasicProcessor):
         max_num: int = 0,
         metric: str = "center",
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
-        """Execute preprocess, model_infer, and postprocess in sequence."""
+        """Execute preprocess, model_infer, and postprocess in sequence.
+
+        Args:
+            img: BGR input image of shape ``(H, W, 3)``.
+            thresh: Confidence threshold. Defaults to ``0.5``.
+            nms_thresh: IoU threshold for NMS. Defaults to ``0.4``.
+            max_num: Maximum detections to return (``0`` = unlimited).
+                Defaults to ``0``.
+            metric: Detection-ranking strategy when ``max_num > 0``
+                (``"center"`` or ``"max"``). Defaults to ``"center"``.
+
+        Returns:
+            Same as :meth:`postprocess`.
+        """
         preprocessed = self.preprocess(img=img)
         raw_outputs = self.model_infer(preprocessed)
         return self.postprocess(
@@ -305,7 +406,17 @@ def distance2bbox(
     distance: np.ndarray,
     max_shape: Optional[Tuple[int, int]] = None,
 ) -> np.ndarray:
-    """Decode distance predictions into bounding boxes."""
+    """Decode distance predictions into bounding boxes.
+
+    Args:
+        points: Anchor centre coordinates of shape ``(N, 2)``.
+        distance: Distance predictions of shape ``(N, 4)`` as
+            ``[left, top, right, bottom]`` offsets from each anchor.
+        max_shape: Optional ``(height, width)`` used to clip coordinates.
+
+    Returns:
+        Bounding boxes of shape ``(N, 4)`` as ``[x1, y1, x2, y2]``.
+    """
     x1 = points[:, 0] - distance[:, 0]
     y1 = points[:, 1] - distance[:, 1]
     x2 = points[:, 0] + distance[:, 2]
@@ -326,7 +437,19 @@ def distance2kps(
     distance: np.ndarray,
     max_shape: Optional[Tuple[int, int]] = None,
 ) -> np.ndarray:
-    """Decode distance predictions into keypoints."""
+    """Decode distance predictions into keypoints.
+
+    Args:
+        points: Anchor centre coordinates of shape ``(N, 2)``.
+        distance: Keypoint distance predictions of shape ``(N, 2*K)``
+            where K is the number of keypoints, interleaved as
+            ``[dx0, dy0, dx1, dy1, ...]``.
+        max_shape: Optional ``(height, width)`` used to clip coordinates.
+
+    Returns:
+        Keypoint coordinates of shape ``(N, 2*K)`` interleaved as
+        ``[x0, y0, x1, y1, ...]``.
+    """
     preds: List[np.ndarray] = []
     for i in range(0, distance.shape[1], 2):
         px = points[:, i % 2] + distance[:, i]
