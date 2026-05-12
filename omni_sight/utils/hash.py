@@ -1,5 +1,7 @@
 import hashlib
 import os
+import re
+from typing import Optional
 
 
 def get_sha256_hash(file_path: str) -> str:
@@ -31,3 +33,21 @@ def get_sha256_hash(file_path: str) -> str:
             sha256.update(chunk)
 
     return sha256.hexdigest()
+
+
+HASH_REGEX = re.compile(r"-([a-f0-9]+)\.")
+
+
+def parse_file_hash(file_name: str) -> Optional[str]:
+    """Extract the hash prefix embedded in a file name.
+
+    Args:
+        file_name: File name containing an optional hash suffix,
+            e.g. ``resnet18-bfd8deac.pth``.
+
+    Returns:
+        The hex hash string (e.g. ``"bfd8deac"``), or ``None`` if no
+        hash pattern is found.
+    """
+    match = HASH_REGEX.search(file_name)
+    return match.group(1) if match else None

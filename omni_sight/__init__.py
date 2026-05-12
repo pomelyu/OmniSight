@@ -3,3 +3,6 @@
 Provides standardized wrappers for image-processing and face-related
 detection and tracking models, with minimal dependencies.
 """
+from logging import getLogger
+
+logger = getLogger("omni-sight")
