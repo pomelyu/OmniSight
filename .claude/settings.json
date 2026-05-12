@@ -1,0 +1,26 @@
+{
+  // "env": {
+  //   "ANTHROPIC_BASE_URL": "http://localhost:4141",
+  //   "ANTHROPIC_AUTH_TOKEN": "dummy",
+  //   "ANTHROPIC_MODEL": "claude-sonnet-4.6",
+  //   "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4.6",
+  //   "ANTHROPIC_SMALL_FAST_MODEL": "claude-sonnet-4.6",
+  //   "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-sonnet-4.6",
+  //   "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
+  //   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  // },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // \"\"' | { read -r f; case \"$f\" in *.py) python -m isort \"$f\" ;; esac; } 2>/dev/null || true",
+            "statusMessage": "Running isort..."
+          }
+        ]
+      }
+    ]
+  }
+}
