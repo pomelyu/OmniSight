@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 
 
 def get_sha256_hash(file_path: str) -> str:
@@ -19,3 +20,11 @@ def get_sha256_hash(file_path: str) -> str:
             sha256.update(chunk)
 
     return sha256.hexdigest()
+
+
+# matches bfd8deac from resnet18-bfd8deac.pth
+HASH_REGEX = re.compile(r"-([a-f0-9]*)\.")
+def parse_file_hash(file_name: str) -> str:
+    r = HASH_REGEX.search(file_name)  # r is Optional[Match[str]]
+    hash_prefix = r.group(1) if r else None
+    return hash_prefix
