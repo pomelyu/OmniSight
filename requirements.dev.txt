@@ -1,4 +1,6 @@
+furo
 isort
 opencv-python-headless
 pylint
 pytest
+sphinx
