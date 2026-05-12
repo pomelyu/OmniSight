@@ -38,6 +38,9 @@ Utilities
    :members:
    :show-inheritance:
 
-.. automodule:: omni_sight.utils.onnx_loader
+ONNX Utilities
+--------------
+
+.. automodule:: omni_sight.onnx.onnx_loader
    :members:
    :show-inheritance:

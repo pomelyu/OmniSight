@@ -13,7 +13,7 @@ import onnxruntime as ort
 
 from omni_sight.basic_processor import BasicProcessor
 from omni_sight.utils.algo import nms
-from omni_sight.utils.onnx_loader import OnnxLoader
+from omni_sight.onnx.onnx_loader import OnnxLoader
 
 scrfd_model_loader = OnnxLoader()
 scrfd_model_loader.set_file(

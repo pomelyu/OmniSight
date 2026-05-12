@@ -5,7 +5,7 @@ from typing import Union
 
 import onnxruntime as ort
 
-from .file_loader import FileLoader
+from omni_sight.utils.file_loader import FileLoader
 
 
 class OnnxLoader(FileLoader):

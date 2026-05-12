@@ -10,7 +10,8 @@ OmniSight is a Python package for porting open-source ML vision models, with a f
 omni_sight/
   <TOOL_CATEGORY>/   # e.g. face_detection — the importable public API
   third_party/       # original third-party code + wrappers for unified interface
-  utils/             # shared utilities (algo, hash, visual)
+  onnx/              # ONNX Runtime utilities (session management, model loading)
+  utils/             # shared utilities (algo, hash, visual, file loading)
 scripts/             # standalone file/data utility scripts
 tests/               # pytest test suite
   resources/         # test fixtures (images, etc.)
