@@ -15,6 +15,17 @@ For development (includes testing, linting, and docs tools):
 pip install -r requirements.dev.txt
 ```
 
+## Input Convention
+
+All OmniSight processors accept **RGB uint8** images — `np.ndarray` of shape
+`(H, W, 3)`, dtype `uint8`, channel order RGB.
+
+If loading with OpenCV (`cv2.imread`), convert before passing to any processor:
+
+```python
+image = cv2.cvtColor(cv2.imread("photo.jpg"), cv2.COLOR_BGR2RGB)
+```
+
 ## Quick Start
 
 ### Python API
@@ -58,9 +69,12 @@ python -m demo.demo_scrfd \
 
 ## Available Models
 
-| Category       | Model  | Backend | Notes                          |
-|----------------|--------|---------|--------------------------------|
-| Face Detection | SCRFD  | ONNX    | 3-scale and 5-scale FPN variants, optional 5-point keypoints |
+| Category         | Model                      | Backend | Notes                                                         |
+|------------------|----------------------------|---------|---------------------------------------------------------------|
+| Depth Estimation | Depth Anything V2 Small    | ONNX    | Relative depth, Apache-2.0                                    |
+| Depth Estimation | Depth Anything V2 Base     | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
+| Depth Estimation | Depth Anything V2 Large    | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
+| Face Detection   | SCRFD                      | ONNX    | 3-scale and 5-scale FPN variants, optional 5-point keypoints  |
 
 ## Building the Documentation
 

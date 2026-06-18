@@ -1,6 +1,17 @@
 API Reference
 =============
 
+Depth Estimation
+----------------
+
+.. automodule:: omni_sight.depth_estimation
+   :members:
+   :show-inheritance:
+
+.. automodule:: omni_sight.third_party.depth_anything_v2.depth_anything_v2_estimator
+   :members:
+   :show-inheritance:
+
 Face Detection
 --------------
 

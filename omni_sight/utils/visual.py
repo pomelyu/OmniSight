@@ -1,10 +1,64 @@
 from __future__ import annotations
 
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 
 import cv2
 import numpy as np
+
+_DEPTH_COLORMAPS: Dict[str, Optional[int]] = {
+    "inferno": cv2.COLORMAP_INFERNO,
+    "magma": cv2.COLORMAP_MAGMA,
+    "plasma": cv2.COLORMAP_PLASMA,
+    "viridis": cv2.COLORMAP_VIRIDIS,
+    "turbo": cv2.COLORMAP_TURBO,
+    "gray": None,
+}
+
+
+def visualize_depth(
+    depth: np.ndarray,
+    colormap: str = "gray",
+) -> np.ndarray:
+    """Convert a float32 depth map to a colorized BGR image.
+
+    The depth map is min-max normalised to ``[0, 255]`` before the colormap
+    is applied. Pass ``colormap="gray"`` for a plain grayscale output.
+
+    Args:
+        depth: float32 array of shape ``(H, W)``.
+        colormap: Name of the colormap to apply. One of ``"inferno"``,
+            ``"magma"``, ``"plasma"``, ``"viridis"``, ``"turbo"``, ``"gray"``.
+            Defaults to ``"inferno"``.
+
+    Returns:
+        BGR uint8 image of shape ``(H, W, 3)``.
+
+    Raises:
+        ValueError: If ``depth`` is not a 2-D array or ``colormap`` is
+            not a recognised name.
+    """
+    if depth.ndim != 2:
+        raise ValueError("depth must be a 2-D array of shape (H, W).")
+    if colormap not in _DEPTH_COLORMAPS:
+        raise ValueError(
+            f"Unknown colormap '{colormap}'. "
+            f"Choose from: {', '.join(_DEPTH_COLORMAPS)}."
+        )
+
+    depth_min = float(depth.min())
+    depth_max = float(depth.max())
+    span = depth_max - depth_min
+    if span < 1e-8:
+        depth_uint8 = np.zeros(depth.shape, dtype=np.uint8)
+    else:
+        depth_uint8 = ((depth - depth_min) / span * 255).astype(np.uint8)
+
+    cv_code = _DEPTH_COLORMAPS[colormap]
+    if cv_code is None:
+        return cv2.cvtColor(depth_uint8, cv2.COLOR_GRAY2BGR)
+    return cv2.applyColorMap(depth_uint8, cv_code)
 
 
 def draw_bbox(

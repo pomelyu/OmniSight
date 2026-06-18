@@ -2,14 +2,21 @@
 name: omini_sight
 description: >
   OmniSight models for image and face processing. Use this skill whenever
-  the user asks to detect faces, run face detection, process images through
-  a vision model, or work with any OmniSight model. For utility helpers
-  (visualization, file loading, hashing), use the omini_sight_tools skill.
+  the user asks to detect faces, estimate depth, run any vision model, or
+  process images through OmniSight. For utility helpers (visualization,
+  file loading, hashing), use the omini_sight_tools skill.
 ---
 
 # OmniSight Model Index
 
 Read the relevant sub-skill file for full API details.
+All processors accept **RGB uint8** images — shape `(H, W, 3)`, dtype `uint8`.
+
+## Depth Estimation
+
+| Model | Notes | File |
+|---|---|---|
+| Depth Anything V2 | Monocular relative depth, Small/Base/Large variants | `depth_estimation/depth_anything_v2.md` |
 
 ## Face Detection
 
