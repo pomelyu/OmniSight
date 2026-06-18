@@ -14,12 +14,13 @@ omni_sight/
   utils/             # shared utilities (algo, hash, visual, file loading)
 scripts/             # standalone file/data utility scripts
 tests/               # pytest test suite
-  resources/         # test fixtures (images, etc.)
-skills/              # AI agent skill definitions, one per tool category
+  resources/         # test fixtures (images, etc.)             
 demo/                # runnable CLI examples (will eventually merge into skills)
 checkpoints/         # model weight files (not committed)
 outputs/             # result output directory (not committed)
 docs/                # Splinx document
+.claude/
+  skills/            # AI agent skill definitions, one per tool category
 ```
 
 ## Core Abstraction
@@ -82,7 +83,7 @@ Test fixtures (sample images, etc.) live in `tests/resources/`.
 
 ## Skills
 
-Each tool category should have a corresponding skill under `skills/` that describes how an AI agent invokes it. The `demo/` scripts serve as interim references until skills are fully defined.
+Each tool category should have a corresponding skill under `./claude/skills/` that describes how an AI agent invokes it. The `demo/` scripts serve as interim references until skills are fully defined.
 
 ## Documentation
 
