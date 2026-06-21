@@ -127,6 +127,40 @@ def draw_bbox(
     return image
 
 
+def draw_mask(
+    image: np.ndarray,
+    mask: np.ndarray,
+    color: Tuple[int, int, int] = (0, 255, 0),
+    alpha: float = 0.4,
+) -> np.ndarray:
+    """Blend a binary segmentation mask over an image and return the image.
+
+    Args:
+        image: BGR uint8 image of shape ``(H, W, 3)``; modified in place.
+        mask: Bool or uint8 array of shape ``(H, W)``. Non-zero pixels are
+            treated as foreground.
+        color: BGR colour tuple for the mask overlay. Defaults to green.
+        alpha: Opacity of the overlay in ``[0, 1]``. Defaults to ``0.4``.
+
+    Returns:
+        The input ``image`` with the mask blended on it.
+
+    Raises:
+        ValueError: If ``mask`` is not a 2-D array or ``alpha`` is not in
+            ``[0, 1]``.
+    """
+    if mask.ndim != 2:
+        raise ValueError("mask must be a 2-D array of shape (H, W).")
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("alpha must be in [0, 1].")
+
+    foreground = mask.astype(bool)
+    overlay = np.zeros_like(image)
+    overlay[foreground] = color
+    cv2.addWeighted(overlay, alpha, image, 1.0, 0, dst=image)
+    return image
+
+
 def draw_keypoints(
     image: np.ndarray,
     kps: np.ndarray,

@@ -75,6 +75,14 @@ python -m demo.demo_scrfd \
 | Depth Estimation | Depth Anything V2 Base     | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Depth Estimation | Depth Anything V2 Large    | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Face Detection   | SCRFD                      | ONNX    | 3-scale and 5-scale FPN variants, optional 5-point keypoints  |
+| Instance Segmentation | SAM MobileSAM         | ONNX    | Prompt-guided masks (points/box), lightweight ViT-Tiny encoder, Apache-2.0 |
+| Instance Segmentation | SAM ViT-B             | ONNX    | Prompt-guided masks (points/box), ViT-Base encoder, Apache-2.0 |
+| Instance Segmentation | SAM ViT-L             | ONNX    | Prompt-guided masks (points/box), ViT-Large encoder, Apache-2.0 |
+| Instance Segmentation | SAM ViT-H             | ONNX    | Prompt-guided masks (points/box), ViT-Huge encoder, Apache-2.0 |
+| Instance Segmentation | SAM MobileSAM-multi   | ONNX    | Multi-output decoder variant of MobileSAM, returns N > 3 mask candidates |
+| Instance Segmentation | SAM ViT-B-multi       | ONNX    | Multi-output decoder variant of SAM ViT-B, returns N > 3 mask candidates |
+| Instance Segmentation | SAM ViT-L-multi       | ONNX    | Multi-output decoder variant of SAM ViT-L, returns N > 3 mask candidates |
+| Instance Segmentation | SAM ViT-H-multi       | ONNX    | Multi-output decoder variant of SAM ViT-H, returns N > 3 mask candidates |
 
 ## Building the Documentation
 

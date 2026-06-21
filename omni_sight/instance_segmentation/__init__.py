@@ -1,0 +1,1 @@
+from omni_sight.third_party.segment_anything.sam_segmentor import SAMSegmentor

@@ -1,6 +1,17 @@
 API Reference
 =============
 
+Instance Segmentation
+---------------------
+
+.. automodule:: omni_sight.instance_segmentation
+   :members:
+   :show-inheritance:
+
+.. automodule:: omni_sight.third_party.segment_anything.sam_segmentor
+   :members:
+   :show-inheritance:
+
 Depth Estimation
 ----------------
 
