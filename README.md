@@ -27,44 +27,23 @@ image = cv2.cvtColor(cv2.imread("photo.jpg"), cv2.COLOR_BGR2RGB)
 ```
 
 ## Quick Start
-
-### Python API
-
-```python
-from omni_sight.face_detection import SCRFDFaceDetector
-import cv2
-
-detector = SCRFDFaceDetector(
-    device="cpu",
-    model_path="checkpoints/scrfd_10g_bnkps_shape512x512-237daff4.onnx",
-)
-
-image = cv2.imread("path/to/image.jpg")
-detections, keypoints = detector.run(image)
-
-# detections: (N, 5) array — [x1, y1, x2, y2, score]
-# keypoints:  (N, 5, 2) array — 5 facial landmarks, or None
-for i, det in enumerate(detections):
-    x1, y1, x2, y2, score = det
-    print(f"[{i}] score={score:.4f}, bbox=({x1:.1f}, {y1:.1f}, {x2:.1f}, {y2:.1f})")
-```
-
 ### CLI Demo
 
 ```bash
-# SCRFD face detection
-# Download models from https://github.com/cysin/scrfd_onnx
-python -m demo.demo_scrfd \
-    --model scrfd_10g_bnkps \
-    --image tests/resources/one_girl.jpg \
-    --output outputs/result.jpg
+# Face Detection
+## SCRFD face detection (scrfd_2.5g_bnkps, scrfd_10g_bnkps)
+python -m demo.demo_scrfd -i tests/resources/one_girl.jpg -m scrfd_10g_bnkps
 
-# Options:
-#   --device   cpu | cuda:0          (default: cpu)
-#   --thresh   confidence threshold  (default: 0.5)
-#   --nms-thresh  NMS IoU threshold  (default: 0.4)
-#   --max-num  max faces to keep     (default: 0 = all)
-#   --metric   center | max          (default: center)
+# Depth Estimation
+## depth anything v2 (depth_anything_v2_small, depth_anything_v2_base, depth_anything_v2_large)
+python -m demo.demo_depth_anything_v2 -i tests/resources/one_girl.jpg -m depth_anything_v2_small
+
+# Instance Segmentation
+## SAM (mobile_sam, sam_vit_b, sam_vit_l, sam_vit_h) - return only highest confidence mask
+##     (mobile_sam-m, sam_vit_b-m, sam_vit_l-m, sam_vit_h-m) - return subpart, part, whole mask
+python -m demo.demo_sam -i tests/resources/pokemons.jpg --points "100,460" --labels "1" -m mobile_sam
+python -m demo.demo_sam -i tests/resources/pokemons.jpg --points "100,460" --labels "1" -m mobile_sam-m
+
 ```
 
 ## Available Models
