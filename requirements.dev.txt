@@ -4,3 +4,4 @@ opencv-python-headless
 pylint
 pytest
 sphinx
+tqdm

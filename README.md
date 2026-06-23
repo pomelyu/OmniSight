@@ -44,6 +44,11 @@ python -m demo.demo_depth_anything_v2 -i tests/resources/one_girl.jpg -m depth_a
 python -m demo.demo_sam -i tests/resources/pokemons.jpg --points "100,460" --labels "1" -m mobile_sam
 python -m demo.demo_sam -i tests/resources/pokemons.jpg --points "100,460" --labels "1" -m mobile_sam-m
 
+## SAM2 (sam2.1_tiny, sam2.1_small, sam2.1_base_plus, sam2.1_large) - return only highest confidence mask
+python -m demo.demo_sam2 -i tests/resources/pokemons.jpg --points "100,460" --labels "1"
+# video segmentation via feeding the previous frame prediction(different from original paper)
+python -m demo.demo_sam2 -i tests/resources/pikabear.mp4 --points "580,140" --labels "1"
+
 ```
 
 ## Available Models
@@ -54,6 +59,10 @@ python -m demo.demo_sam -i tests/resources/pokemons.jpg --points "100,460" --lab
 | Depth Estimation | Depth Anything V2 Base     | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Depth Estimation | Depth Anything V2 Large    | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Face Detection   | SCRFD                      | ONNX    | 3-scale and 5-scale FPN variants, optional 5-point keypoints  |
+| Instance Segmentation | SAM2.1 Hiera Tiny     | ONNX    | Image/video segmentation via mask propagation, ViT-Tiny backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Small    | ONNX    | Image/video segmentation via mask propagation, ViT-Small backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Base+    | ONNX    | Image/video segmentation via mask propagation, ViT-Base+ backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Large    | ONNX    | Image/video segmentation via mask propagation, ViT-Large backbone, Apache-2.0 |
 | Instance Segmentation | SAM MobileSAM         | ONNX    | Prompt-guided masks (points/box), lightweight ViT-Tiny encoder, Apache-2.0 |
 | Instance Segmentation | SAM ViT-B             | ONNX    | Prompt-guided masks (points/box), ViT-Base encoder, Apache-2.0 |
 | Instance Segmentation | SAM ViT-L             | ONNX    | Prompt-guided masks (points/box), ViT-Large encoder, Apache-2.0 |
