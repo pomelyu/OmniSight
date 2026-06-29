@@ -16,6 +16,10 @@ Instance Segmentation
    :members:
    :show-inheritance:
 
+.. automodule:: omni_sight.third_party.segment_anything.sam2_torch_segmentator
+   :members:
+   :show-inheritance:
+
 Depth Estimation
 ----------------
 

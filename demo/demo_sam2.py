@@ -5,13 +5,17 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 from typing import Optional
+from typing import Union
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 
 from omni_sight.instance_segmentation import SAM2OnnxSegmentator
+from omni_sight.instance_segmentation import SAM2TorchSegmentator
 from omni_sight.utils.visual import draw_mask
+
+_Segmentator = Union[SAM2OnnxSegmentator, SAM2TorchSegmentator]
 
 
 def _parse_points(points_str: str) -> np.ndarray:
@@ -55,8 +59,61 @@ def _parse_box(box_str: str) -> Optional[np.ndarray]:
     return np.array([float(p) for p in parts], dtype=np.float32)
 
 
+def _open_video(path: Path):
+    """Open a VideoCapture and return it with stream metadata.
+
+    Args:
+        path: Path to the video file.
+
+    Returns:
+        Tuple of ``(cap, fps, width, height, total_frames)``.
+
+    Raises:
+        ValueError: If the video cannot be opened.
+    """
+    cap = cv2.VideoCapture(str(path))
+    if not cap.isOpened():
+        raise ValueError(f"Cannot open video: {path}")
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or None
+    return cap, fps, width, height, total
+
+
+def _make_writer(path: Path, fps: float, width: int, height: int) -> cv2.VideoWriter:
+    """Create an mp4v VideoWriter, making parent dirs as needed.
+
+    Args:
+        path: Output file path.
+        fps: Frames per second.
+        width: Frame width in pixels.
+        height: Frame height in pixels.
+
+    Returns:
+        An opened :class:`cv2.VideoWriter`.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    return cv2.VideoWriter(str(path), fourcc, fps, (width, height))
+
+
+def _overlay_frame(bgr: np.ndarray, mask: np.ndarray, frame_idx: int, score: Optional[float] = None) -> None:
+    """Draw a green mask overlay and frame annotation on ``bgr`` in-place.
+
+    Args:
+        bgr: BGR image to annotate.
+        mask: bool ``(H, W)`` mask.
+        frame_idx: Frame index displayed in the annotation.
+        score: Optional IoU score to append to the annotation text.
+    """
+    draw_mask(bgr, mask, color=(0, 255, 0), alpha=0.4)
+    label = f"frame {frame_idx}" + (f"  iou={score:.3f}" if score is not None else "")
+    cv2.putText(bgr, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+
+
 def _run_image(
-    seg: SAM2OnnxSegmentator,
+    seg: _Segmentator,
     input_path: Path,
     output_path: Path,
     point_coords: Optional[np.ndarray],
@@ -66,7 +123,7 @@ def _run_image(
     """Segment a single image and save the result.
 
     Args:
-        seg: Initialised :class:`SAM2OnnxSegmentator`.
+        seg: Initialised segmentator (ONNX or PyTorch).
         input_path: Path to the input image.
         output_path: Path to write the output image.
         point_coords: Click coordinates or ``None``.
@@ -100,7 +157,7 @@ def _run_image(
     print(f"Saved: {output_path}")
 
 
-def _run_video(
+def _run_video_onnx(
     seg: SAM2OnnxSegmentator,
     input_path: Path,
     output_path: Path,
@@ -108,56 +165,33 @@ def _run_video(
     point_labels: Optional[np.ndarray],
     box: Optional[np.ndarray],
 ) -> None:
-    """Segment a video, propagating the mask across frames, and save the result.
+    """Segment a video frame-by-frame via ONNX mask propagation.
 
     Args:
         seg: Initialised :class:`SAM2OnnxSegmentator`.
         input_path: Path to the input video file.
         output_path: Path to write the output ``.mp4`` video.
         point_coords: Click coordinates for the first frame or ``None``.
-        point_labels: Click labels for the first frame or ``None``.
+        point_labels: Click labels or ``None``.
         box: Bounding-box prompt for the first frame or ``None``.
     """
-    cap = cv2.VideoCapture(str(input_path))
-    if not cap.isOpened():
-        raise ValueError(f"Cannot open video: {input_path}")
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or None
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    writer = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
+    cap, fps, width, height, total = _open_video(input_path)
+    writer = _make_writer(output_path, fps, width, height)
 
     frame_idx = 0
-    with tqdm(total=total, unit="frame", desc="Segmenting") as pbar:
+    with tqdm(total=total, unit="frame", desc="Segmenting (ONNX)") as pbar:
         while True:
             ok, bgr = cap.read()
             if not ok:
                 break
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-
             if frame_idx == 0:
-                masks, scores = seg.initialize(
-                    rgb, point_coords=point_coords, point_labels=point_labels, box=box
-                )
+                masks, scores = seg.initialize(rgb, point_coords=point_coords, point_labels=point_labels, box=box)
             else:
                 masks, scores = seg.propagate(rgb)
-
-            score = float(scores[0])
-            draw_mask(bgr, masks[0], color=(0, 255, 0), alpha=0.4)
-            cv2.putText(
-                bgr,
-                f"frame {frame_idx}  iou={score:.3f}",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (255, 255, 255),
-                2,
-            )
+            _overlay_frame(bgr, masks[0], frame_idx, float(scores[0]))
             writer.write(bgr)
-            pbar.set_postfix(iou=f"{score:.3f}")
+            pbar.set_postfix(iou=f"{scores[0]:.3f}")
             pbar.update(1)
             frame_idx += 1
 
@@ -166,68 +200,93 @@ def _run_video(
     print(f"Processed {frame_idx} frames. Saved: {output_path}")
 
 
+def _run_video_torch(
+    seg: SAM2TorchSegmentator,
+    input_path: Path,
+    output_path: Path,
+    point_coords: Optional[np.ndarray],
+    point_labels: Optional[np.ndarray],
+    box: Optional[np.ndarray],
+) -> None:
+    """Segment a video with SAM2 full temporal memory, then write annotated output.
+
+    Loads all frames first, runs :meth:`~SAM2TorchSegmentator.process_video`
+    to obtain masks for every frame, then writes the output video.
+
+    Args:
+        seg: Initialised :class:`SAM2TorchSegmentator`.
+        input_path: Path to the input video file.
+        output_path: Path to write the output ``.mp4`` video.
+        point_coords: Click coordinates for the first frame or ``None``.
+        point_labels: Click labels or ``None``.
+        box: Bounding-box prompt for the first frame or ``None``.
+    """
+    cap, fps, width, height, total = _open_video(input_path)
+
+    bgr_frames = []
+    rgb_frames = []
+    with tqdm(total=total, unit="frame", desc="Loading") as pbar:
+        while True:
+            ok, bgr = cap.read()
+            if not ok:
+                break
+            bgr_frames.append(bgr)
+            rgb_frames.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+            pbar.update(1)
+    cap.release()
+
+    if not rgb_frames:
+        raise ValueError(f"No frames read from video: {input_path}")
+
+    print("Running SAM2 temporal propagation …")
+    all_masks, _ = seg.process_video(rgb_frames, point_coords=point_coords, point_labels=point_labels, box=box)
+
+    writer = _make_writer(output_path, fps, width, height)
+    for frame_idx, (bgr, mask) in enumerate(zip(bgr_frames, all_masks)):
+        _overlay_frame(bgr, mask, frame_idx)
+        writer.write(bgr)
+    writer.release()
+    print(f"Processed {len(bgr_frames)} frames. Saved: {output_path}")
+
+
 def main() -> None:
     """Run SAM2.1 segmentation from the command line."""
     parser = argparse.ArgumentParser(
         description=(
-            "Run SAM2.1 segmentation on an image or video.\n"
-            "For video, the mask is propagated frame-to-frame using mask_input."
+            "Run SAM2.1 segmentation on an image or video.\n\n"
+            "ONNX backend: fast, no PyTorch required; mask propagation only.\n"
+            "PyTorch backend: full temporal memory attention; uses reference/sam2."
         )
     )
     parser.add_argument("--input", "-i", required=True, help="Path to input image or video.")
     parser.add_argument(
-        "--encoder",
-        default="",
-        help="Path to the SAM2.1 encoder ONNX file.",
+        "--backend", "-b", default="onnx", choices=["onnx", "torch"],
+        help="Inference backend: 'onnx' (default) or 'torch'.",
+    )
+    parser.add_argument("--encoder", default="", help="[ONNX] Path to the encoder ONNX file.")
+    parser.add_argument("--decoder", default="", help="[ONNX] Path to the decoder ONNX file.")
+    parser.add_argument("--checkpoint", default="", help="[PyTorch] Path to the .pt checkpoint file.")
+    parser.add_argument(
+        "--model_name", "-m", default="sam2.1_tiny",
+        choices=["sam2.1_tiny", "sam2.1_small", "sam2.1_base_plus", "sam2.1_large"],
+        help="Model variant (default: sam2.1_tiny).",
+    )
+    parser.add_argument("--device", default="cpu", help="Inference device (default: cpu).")
+    parser.add_argument(
+        "--points", default="",
+        help='Space-separated "x,y" click coordinates for frame 0. Example: --points "320,240"',
     )
     parser.add_argument(
-        "--decoder",
-        default="",
-        help="Path to the SAM2.1 decoder ONNX file.",
+        "--labels", default="",
+        help='Labels for --points: 1=fg, 0=bg (default: all 1). Example: --labels "1"',
     )
     parser.add_argument(
-        "--model_name", "-m",
-        default="sam2.1_tiny",
-        choices=[
-            "sam2.1_tiny",
-            "sam2.1_small",
-            "sam2.1_base_plus",
-            "sam2.1_large",
-        ],
-        help="Optional model variant name for validation.",
+        "--box", default="",
+        help='Bounding-box prompt "x1,y1,x2,y2". Example: --box "100,80,400,320"',
     )
     parser.add_argument(
-        "--device",
-        default="cpu",
-        help="Inference device, e.g. cpu or cuda (default: cpu).",
-    )
-    parser.add_argument(
-        "--points",
-        default="",
-        help=(
-            'Space-separated "x,y" click coordinates (prompt for frame 0). '
-            'Example: --points "320,240"'
-        ),
-    )
-    parser.add_argument(
-        "--labels",
-        default="",
-        help=(
-            "Space-separated click labels matching --points. "
-            "1=foreground, 0=background (default: all 1). "
-            'Example: --labels "1"'
-        ),
-    )
-    parser.add_argument(
-        "--box",
-        default="",
-        help='Bounding-box prompt for frame 0 "x1,y1,x2,y2". Example: --box "100,80,400,320"',
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        default="outputs/sam2_demo.jpg",
-        help="Output path. Use .mp4 extension for video output (default: outputs/sam2_demo.jpg).",
+        "--output", "-o", default="outputs/sam2_demo.jpg",
+        help="Output path (.mp4 for video). Default: outputs/sam2_demo.jpg",
     )
     args = parser.parse_args()
 
@@ -241,12 +300,11 @@ def main() -> None:
     point_labels: Optional[np.ndarray] = None
     if args.points:
         point_coords = _parse_points(args.points)
-        if args.labels:
-            point_labels = np.array(
-                [float(l) for l in args.labels.split()], dtype=np.float32
-            )
-        else:
-            point_labels = np.ones(len(point_coords), dtype=np.float32)
+        point_labels = (
+            np.array([float(l) for l in args.labels.split()], dtype=np.float32)
+            if args.labels
+            else np.ones(len(point_coords), dtype=np.float32)
+        )
 
     box = _parse_box(args.box)
 
@@ -256,17 +314,33 @@ def main() -> None:
             'Example: --points "320,240" --labels "1"'
         )
 
-    seg = SAM2OnnxSegmentator(
-        device=args.device,
-        model_name=args.model_name,
-        encoder_path=str(Path(args.encoder).resolve()) if args.encoder else None,
-        decoder_path=str(Path(args.decoder).resolve()) if args.decoder else None,
-    )
+    seg: _Segmentator
+    if args.backend == "onnx":
+        seg = SAM2OnnxSegmentator(
+            device=args.device,
+            model_name=args.model_name,
+            encoder_path=str(Path(args.encoder).resolve()) if args.encoder else None,
+            decoder_path=str(Path(args.decoder).resolve()) if args.decoder else None,
+        )
+    else:
+        if not args.checkpoint:
+            raise ValueError(
+                "PyTorch backend requires --checkpoint. "
+                "Example: --checkpoint checkpoints/sam2.1_hiera_tiny.pt"
+            )
+        seg = SAM2TorchSegmentator(
+            device=args.device,
+            model_name=args.model_name,
+            model_path=str(Path(args.checkpoint).resolve()),
+        )
 
-    video_exts = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
-    if input_path.suffix.lower() in video_exts:
+    is_video = input_path.suffix.lower() in {".mp4", ".avi", ".mov", ".mkv", ".webm"}
+    if is_video:
         output_path = output_path.with_suffix(".mp4")
-        _run_video(seg, input_path, output_path, point_coords, point_labels, box)
+        if args.backend == "torch":
+            _run_video_torch(seg, input_path, output_path, point_coords, point_labels, box)
+        else:
+            _run_video_onnx(seg, input_path, output_path, point_coords, point_labels, box)
     else:
         _run_image(seg, input_path, output_path, point_coords, point_labels, box)
 

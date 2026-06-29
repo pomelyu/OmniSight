@@ -1,2 +1,3 @@
 from omni_sight.third_party.segment_anything.sam2_onnx_segmentator import SAM2OnnxSegmentator
+from omni_sight.third_party.segment_anything.sam2_torch_segmentator import SAM2TorchSegmentator
 from omni_sight.third_party.segment_anything.sam_segmentor import SAMSegmentor

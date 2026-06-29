@@ -63,6 +63,10 @@ python -m demo.demo_sam2 -i tests/resources/pikabear.mp4 --points "580,140" --la
 | Instance Segmentation | SAM2.1 Hiera Small    | ONNX    | Image/video segmentation via mask propagation, ViT-Small backbone, Apache-2.0 |
 | Instance Segmentation | SAM2.1 Hiera Base+    | ONNX    | Image/video segmentation via mask propagation, ViT-Base+ backbone, Apache-2.0 |
 | Instance Segmentation | SAM2.1 Hiera Large    | ONNX    | Image/video segmentation via mask propagation, ViT-Large backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Tiny     | PyTorch | Image/video segmentation with full temporal memory attention, ViT-Tiny backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Small    | PyTorch | Image/video segmentation with full temporal memory attention, ViT-Small backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Base+    | PyTorch | Image/video segmentation with full temporal memory attention, ViT-Base+ backbone, Apache-2.0 |
+| Instance Segmentation | SAM2.1 Hiera Large    | PyTorch | Image/video segmentation with full temporal memory attention, ViT-Large backbone, Apache-2.0 |
 | Instance Segmentation | SAM MobileSAM         | ONNX    | Prompt-guided masks (points/box), lightweight ViT-Tiny encoder, Apache-2.0 |
 | Instance Segmentation | SAM ViT-B             | ONNX    | Prompt-guided masks (points/box), ViT-Base encoder, Apache-2.0 |
 | Instance Segmentation | SAM ViT-L             | ONNX    | Prompt-guided masks (points/box), ViT-Large encoder, Apache-2.0 |

@@ -25,7 +25,7 @@ extensions = [
 
 # Mock heavy runtime dependencies so Sphinx can import the package without
 # needing them installed in the docs build environment.
-autodoc_mock_imports = ["cv2", "numpy", "onnxruntime"]
+autodoc_mock_imports = ["cv2", "numpy", "onnxruntime", "torch", "sam2"]
 
 autodoc_member_order = "bysource"
 autodoc_default_options = {
