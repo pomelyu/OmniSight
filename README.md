@@ -38,6 +38,10 @@ python -m demo.demo_scrfd -i tests/resources/one_girl.jpg -m scrfd_10g_bnkps
 ## depth anything v2 (depth_anything_v2_small, depth_anything_v2_base, depth_anything_v2_large)
 python -m demo.demo_depth_anything_v2 -i tests/resources/one_girl.jpg -m depth_anything_v2_small
 
+# Image Matting
+## MODNet portrait matting
+python -m demo.demo_modnet -i tests/resources/one_girl.jpg
+
 # Instance Segmentation
 ## SAM (mobile_sam, sam_vit_b, sam_vit_l, sam_vit_h) - return only highest confidence mask
 ##     (mobile_sam-m, sam_vit_b-m, sam_vit_l-m, sam_vit_h-m) - return subpart, part, whole mask
@@ -59,6 +63,7 @@ python -m demo.demo_sam2 -i tests/resources/pikabear.mp4 --points "580,140" --la
 | Depth Estimation | Depth Anything V2 Base     | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Depth Estimation | Depth Anything V2 Large    | ONNX    | Relative depth, CC-BY-NC-4.0                                  |
 | Face Detection   | SCRFD                      | ONNX    | 3-scale and 5-scale FPN variants, optional 5-point keypoints  |
+| Image Matting    | MODNet                     | ONNX    | Photographic portrait alpha matting, Apache-2.0               |
 | Instance Segmentation | SAM2.1 Hiera Tiny     | ONNX    | Image/video segmentation via mask propagation, ViT-Tiny backbone, Apache-2.0 |
 | Instance Segmentation | SAM2.1 Hiera Small    | ONNX    | Image/video segmentation via mask propagation, ViT-Small backbone, Apache-2.0 |
 | Instance Segmentation | SAM2.1 Hiera Base+    | ONNX    | Image/video segmentation via mask propagation, ViT-Base+ backbone, Apache-2.0 |

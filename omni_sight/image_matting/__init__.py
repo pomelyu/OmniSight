@@ -1,0 +1,1 @@
+from omni_sight.third_party.modnet import MODNetImageMatter

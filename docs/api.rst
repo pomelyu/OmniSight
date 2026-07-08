@@ -38,6 +38,17 @@ Face Detection
    :members:
    :show-inheritance:
 
+Image Matting
+-------------
+
+.. automodule:: omni_sight.image_matting
+   :members:
+   :show-inheritance:
+
+.. automodule:: omni_sight.third_party.modnet.modnet_image_matter
+   :members:
+   :show-inheritance:
+
 Base Class
 ----------
 

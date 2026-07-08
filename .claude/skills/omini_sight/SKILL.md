@@ -24,6 +24,12 @@ All processors accept **RGB uint8** images — shape `(H, W, 3)`, dtype `uint8`.
 |---|---|---|
 | Depth Anything V2 | Monocular relative depth, Small/Base/Large variants | `depth_estimation/depth_anything_v2.md` |
 
+## Image Matting
+
+| Model | Notes | File |
+|---|---|---|
+| MODNet | Portrait alpha matting, returns uint8 alpha map | `image_matting/modnet.md` |
+
 ## Face Detection
 
 | Model | Notes | File |
